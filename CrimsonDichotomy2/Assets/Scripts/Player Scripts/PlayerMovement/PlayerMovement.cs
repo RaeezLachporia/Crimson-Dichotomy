@@ -7,7 +7,13 @@ public class PlayerMovement : MonoBehaviour
     [Header("Movement")]
     public float movementSpeed;
 
+    public float jumpForce;
+    public float jumpCooldown;
+    public float airMultiplier;
+    bool readyToJump;
 
+    [Header("Keybinds")]
+    public KeyCode jumpKey = KeyCode.Space;
     [Header("Ground check")]
     public float playerHeight;
     public float groundDrag;
@@ -21,10 +27,13 @@ public class PlayerMovement : MonoBehaviour
     Vector3 movementDirection;
     Rigidbody rb;
 
+
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
+        readyToJump = true;
     }
     private void Update()
     {
@@ -51,13 +60,31 @@ public class PlayerMovement : MonoBehaviour
     {
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
+
+        if (Input.GetKey(jumpKey) && readyToJump&& grounded) 
+        {
+            readyToJump = true;
+
+            JumpSystem();
+            Invoke(nameof(resetJump), jumpCooldown);
+        }
     }
 
     private void movePlayer()
     {
         movementDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        rb.AddForce(movementDirection.normalized * movementSpeed * 10f, ForceMode.Force);
+        if (grounded)
+        {
+            rb.AddForce(movementDirection.normalized * movementSpeed * 10f, ForceMode.Force);
+        }
+       
+        else if (!grounded)
+        {
+            rb.AddForce(movementDirection.normalized * movementSpeed * 5f * airMultiplier, ForceMode.Force);
+        }
+            
+        
     }
 
     private void SpeedControl()
@@ -72,4 +99,17 @@ public class PlayerMovement : MonoBehaviour
             rb.velocity = new Vector3(limitvelocity.x, rb.velocity.y, limitvelocity.z);
         }
     }
+
+    private void JumpSystem()
+    {
+        //reset y value
+        rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+
+        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+    }
+    private void resetJump()
+    {
+        readyToJump = true;
+    }
+
 }
