@@ -5,8 +5,11 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
-    public float movementSpeed;
+    private float movementSpeed;
+    public float walkSpeed;
+    public float sprintSpeed;
 
+    [Header("Jumping")]
     public float jumpForce;
     public float jumpCooldown;
     public float airMultiplier;
@@ -14,6 +17,9 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space;
+    public KeyCode sprintKey = KeyCode.LeftShift;
+
+
     [Header("Ground check")]
     public float playerHeight;
     public float groundDrag;
@@ -27,8 +33,31 @@ public class PlayerMovement : MonoBehaviour
     Vector3 movementDirection;
     Rigidbody rb;
 
-
-
+    public MovementState state;
+    public enum MovementState
+    {
+        walking,
+        sprinting,
+        air
+    }
+    public void stateHandler()
+    {
+        //player is sprinting
+        if (grounded && Input.GetKey(sprintKey))
+        {
+            state = MovementState.sprinting;
+            movementSpeed = sprintSpeed;
+        }
+        else if (grounded)
+        {
+            state = MovementState.walking;
+            movementSpeed = walkSpeed;
+        }
+        else 
+        {
+            state = MovementState.air;
+        }
+    }
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -51,6 +80,7 @@ public class PlayerMovement : MonoBehaviour
             Debug.Log("player is not touching the ground");
         }
         SpeedControl();
+        stateHandler();
     }
     private void FixedUpdate()
     {
